@@ -1,8 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { HeroesService } from '../../services/heroes.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Hero } from '../../interfaces/hero.interface';
-import { switchMap } from 'rxjs';
+import { Subscription, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-hero-page',
@@ -10,9 +10,10 @@ import { switchMap } from 'rxjs';
   styles: [
   ]
 })
-export class HeroPageComponent implements OnInit{
+export class HeroPageComponent implements OnInit, OnDestroy{
 
-  public hero?: Hero
+  public hero?: Hero;
+  private heroSuscripcion?: Subscription;
 
   constructor(
     private heroService : HeroesService,
@@ -21,23 +22,35 @@ export class HeroPageComponent implements OnInit{
   ) { }
 
 
-
+  
+  
+  
   ngOnInit(): void {
-    this.activatedRoute.params
+    this.heroSuscripcion = this.activatedRoute.params
     .pipe(
-
+      
       switchMap(({id}) => this.heroService.getHeroByID(id))
       
     ).subscribe( hero =>{
-
+      
       if(!hero) return this.router.navigate(['/heroes/list'])
-
+        
         this.hero = hero;
         console.log({hero})
         return;
-    })
+      })
+      
+    }
+    
 
-  }
+    ngOnDestroy(): void {
+      if (this.heroSuscripcion ) {
+        this.heroSuscripcion.unsubscribe();
+      }
+      console.log('Se destruyó la suscripcion')
+    }
+
+
 
   goBack(){
     this.router.navigateByUrl('/heroes/list')
